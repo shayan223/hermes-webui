@@ -1,0 +1,5 @@
+UID=1000
+GID=1000
+#HERMES_HOME=C:/Users/shaya/.hermes
+HERMES_WORKSPACE=C:\Users\shaya\Documents\hermes\hermes_workspace
+HERMES_AGENT_HOME=C:\Users\shaya\Documents\hermes\hermes_agent
