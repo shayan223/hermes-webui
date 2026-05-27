@@ -26,24 +26,15 @@
 # container setup where everything lives in one place.
 #
 # NOTE ON VOLUMES:
-#   This file uses named Docker volumes (hermes-home, hermes-agent-src) which
-#   work out of the box on every Docker installation. If you prefer bind mounts
-#   to share an existing host directory:
+#   This file bind-mounts HERMES_AGENT_HOME from .env as the shared .hermes
+#   home for both containers. That keeps config, state, sessions, skills,
+#   and memory visible on the host while still sharing one home between the
+#   agent and WebUI containers. HERMES_WORKSPACE from .env is mounted at
+#   /workspace for the WebUI file browser.
 #
-#     volumes:
-#       hermes-home:
-#         driver: local
-#         driver_opts:
-#           type: none
-#           o: bind
-#           device: /home/youruser/.hermes
-#
-#   When using bind mounts, BOTH containers must mount the same host path,
-#   AND your host directory must be readable by UID 1000 (the default). Run:
-#     id -u && id -g
-#   to find your host UID/GID, then put them in a .env file:
-#     echo "UID=$(id -u)" >> .env
-#     echo "GID=$(id -g)" >> .env
+#   Both containers must be able to read/write the shared host path. On Linux
+#   and macOS, set UID/GID in .env to match your host user. On Docker Desktop
+#   for Windows, the bind mount is mediated by Docker Desktop file sharing.
 
 services:
   hermes-agent:
@@ -57,7 +48,7 @@ services:
       - "127.0.0.1:8642:8642"
     volumes:
       # Persist config, state, sessions, skills, memory across restarts
-      - hermes-home:/home/hermes/.hermes
+      - ${HERMES_AGENT_HOME:?Set HERMES_AGENT_HOME in .env to your host Hermes home directory}:/home/hermes/.hermes
       # Expose agent source so the WebUI can install dependencies from it
       - hermes-agent-src:/opt/hermes
     environment:
@@ -89,7 +80,7 @@ services:
       - "127.0.0.1:8787:8787"
     volumes:
       # Same hermes home as the agent — shares config, sessions, state
-      - hermes-home:/home/hermeswebui/.hermes
+      - ${HERMES_AGENT_HOME:?Set HERMES_AGENT_HOME in .env to your host Hermes home directory}:/home/hermeswebui/.hermes
       # Agent source mounted where docker_init.bash expects it.
       # At startup the init script runs:
       #   uv pip install /home/hermeswebui/.hermes/hermes-agent
@@ -129,5 +120,4 @@ networks:
     driver: bridge
 
 volumes:
-  hermes-home:
   hermes-agent-src:
