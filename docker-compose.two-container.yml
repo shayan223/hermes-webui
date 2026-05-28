@@ -30,7 +30,9 @@
 #   home for both containers. That keeps config, state, sessions, skills,
 #   and memory visible on the host while still sharing one home between the
 #   agent and WebUI containers. HERMES_WORKSPACE from .env is mounted at
-#   /workspace for the WebUI file browser.
+#   /workspace in both containers. The WebUI uses it for the file browser;
+#   the gateway uses the same container path for CLI, messaging, cron, and
+#   gateway-originated work.
 #
 #   Both containers must be able to read/write the shared host path. On Linux
 #   and macOS, set UID/GID in .env to match your host user. On Docker Desktop
@@ -51,8 +53,12 @@ services:
       - ${HERMES_AGENT_HOME:?Set HERMES_AGENT_HOME in .env to your host Hermes home directory}:/home/hermes/.hermes
       # Expose agent source so the WebUI can install dependencies from it
       - hermes-agent-src:/opt/hermes
+      # Same workspace mount as the WebUI. Gateway sessions cannot use the
+      # host-side HERMES_WORKSPACE path directly; inside the container it is /workspace.
+      - ${HERMES_WORKSPACE:-~/workspace}:/workspace
     environment:
       - HERMES_HOME=/home/hermes/.hermes
+      - HERMES_WORKSPACE=/workspace
       # Align UID/GID across containers sharing the hermes-home volume.
       # Defaults to 1000 to match WANTED_UID/WANTED_GID in the webui service.
       # The agent image's entrypoint already supports usermod remapping.
@@ -94,6 +100,7 @@ services:
       - HERMES_WEBUI_HOST=0.0.0.0
       - HERMES_WEBUI_PORT=8787
       - HERMES_WEBUI_STATE_DIR=/home/hermeswebui/.hermes/webui
+      - HERMES_WEBUI_DEFAULT_WORKSPACE=/workspace
       # Match your host user's UID/GID for correct file permissions.
       # In two-container setups the WebUI auto-detects UID/GID from the shared
       # hermes-home volume, but you can override explicitly if needed (#668):

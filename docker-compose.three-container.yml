@@ -32,6 +32,8 @@
 #   directory), see docker-compose.two-container.yml for a bind-mount example.
 #   When using bind mounts, ALL THREE containers must mount the same host path
 #   AND run as the same UID/GID (set via the UID/GID env vars below).
+#   HERMES_WORKSPACE is mounted at /workspace in the agent and WebUI containers
+#   so gateway-originated work and browser-originated work see the same files.
 
 services:
   hermes-agent:
@@ -45,8 +47,12 @@ services:
       - hermes-home:/home/hermes/.hermes
       # Expose agent source so the WebUI can install dependencies from it
       - hermes-agent-src:/opt/hermes
+      # Same workspace mount as the WebUI. Gateway sessions cannot use the
+      # host-side HERMES_WORKSPACE path directly; inside the container it is /workspace.
+      - ${HERMES_WORKSPACE:-~/workspace}:/workspace
     environment:
       - HERMES_HOME=/home/hermes/.hermes
+      - HERMES_WORKSPACE=/workspace
       # Align UID/GID across containers sharing the hermes-home volume.
       # Defaults to 1000 to match WANTED_UID/WANTED_GID in the webui service.
       - HERMES_UID=${UID:-1000}
@@ -120,6 +126,7 @@ services:
       - HERMES_WEBUI_HOST=0.0.0.0
       - HERMES_WEBUI_PORT=8787
       - HERMES_WEBUI_STATE_DIR=/home/hermeswebui/.hermes/webui
+      - HERMES_WEBUI_DEFAULT_WORKSPACE=/workspace
       # Match your host user's UID/GID for correct file permissions.
       # Run `id -u` and `id -g` to find your values.
       # On macOS, UIDs start at 501 (not 1000) — set these in a .env file:

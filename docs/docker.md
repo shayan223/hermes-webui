@@ -111,7 +111,28 @@ Both are documented in `api/startup.py::fix_credential_permissions()`.
 
 If you must use a bind mount: pick a host path, then mount it to `/opt/hermes` in the agent container AND `/home/hermeswebui/.hermes/hermes-agent` in the WebUI container.
 
-### 5. "Tools (git, node, etc.) missing in two-container setup" (#681)
+### 5. "Gateway sessions can't see my workspace"
+
+**Symptom**: The WebUI file browser can see `/workspace`, but CLI, messaging,
+cron, or other gateway-originated work cannot access the project directory set
+with `HERMES_WORKSPACE` in `.env`.
+
+**Cause**: In multi-container Docker, the host path from `.env` is only useful
+to Docker Compose while it creates mounts. Processes inside containers must use
+the in-container path. The two- and three-container compose files mount
+`HERMES_WORKSPACE` at `/workspace` in both the gateway and WebUI containers and
+set the gateway's `HERMES_WORKSPACE=/workspace`.
+
+**Fix**: Recreate the containers after changing `.env` or the compose file:
+
+```bash
+docker compose -f docker-compose.two-container.yml up -d --force-recreate
+```
+
+For the three-container setup, use `docker-compose.three-container.yml` in the
+same command.
+
+### 6. "Tools (git, node, etc.) missing in two-container setup" (#681)
 
 **Symptom**: You ask the agent to run `git status` in chat and it errors with `command not found`.
 
@@ -122,7 +143,7 @@ If you must use a bind mount: pick a host path, then mount it to `/opt/hermes` i
 - **Custom WebUI image** — extend the `Dockerfile` to install the tools you need
 - **Combined image** ([sunnysktsang/hermes-suite](https://github.com/sunnysktsang/hermes-suite)) — community fork that ships agent+webui+dashboard in one container
 
-### 6. "config.yaml not loaded"
+### 7. "config.yaml not loaded"
 
 **Symptom**: You have a `config.yaml` in your host `~/.hermes/`, but the WebUI shows "no model configured" or doesn't pick up your custom providers.
 
@@ -133,7 +154,7 @@ If you must use a bind mount: pick a host path, then mount it to `/opt/hermes` i
 - If it doesn't exist: your host bind mount is pointing at the wrong directory.
 - If it exists but is unreadable: see #1 for the UID/GID fix.
 
-### 7. "On Podman: can't share .hermes between containers"
+### 8. "On Podman: can't share .hermes between containers"
 
 **Symptom**: Two-container setup works on Docker but fails on Podman with permission errors no matter what UID/GID you set.
 
@@ -167,6 +188,11 @@ The two- and three-container setups use **named Docker volumes** (not bind mount
 ```
 
 The WebUI container doesn't ship with the agent's Python deps — at startup it runs `uv pip install /home/hermeswebui/.hermes/hermes-agent` to install them from the shared volume.
+
+`HERMES_WORKSPACE` follows the same cross-container rule: Compose resolves the
+host path from `.env`, then mounts it at `/workspace` in containers that need
+filesystem access. Do not configure the gateway to use the host path directly;
+inside Docker, use `/workspace`.
 
 ## Bind-mount migration (advanced)
 

@@ -85,6 +85,38 @@ def test_single_container_compose_uses_same_uid_source():
     assert "WANTED_GID=${GID:-1000}" in src
 
 
+def test_two_container_agent_and_webui_share_workspace_mount():
+    """REGRESSION: HERMES_WORKSPACE from .env must be mounted into the
+    gateway container too. The WebUI file browser can work with only the WebUI
+    mount, but CLI/messaging/cron sessions started by the gateway need the
+    same in-container /workspace path."""
+    import yaml
+
+    data = yaml.safe_load((REPO / "docker-compose.two-container.yml").read_text(encoding="utf-8"))
+    services = data["services"]
+
+    expected_mount = "${HERMES_WORKSPACE:-~/workspace}:/workspace"
+    assert expected_mount in services["hermes-agent"]["volumes"]
+    assert expected_mount in services["hermes-webui"]["volumes"]
+    assert "HERMES_WORKSPACE=/workspace" in services["hermes-agent"]["environment"]
+    assert "HERMES_WEBUI_DEFAULT_WORKSPACE=/workspace" in services["hermes-webui"]["environment"]
+
+
+def test_three_container_agent_and_webui_share_workspace_mount():
+    """The three-container setup has the same gateway/WebUI workspace contract
+    as the two-container setup."""
+    import yaml
+
+    data = yaml.safe_load((REPO / "docker-compose.three-container.yml").read_text(encoding="utf-8"))
+    services = data["services"]
+
+    expected_mount = "${HERMES_WORKSPACE:-~/workspace}:/workspace"
+    assert expected_mount in services["hermes-agent"]["volumes"]
+    assert expected_mount in services["hermes-webui"]["volumes"]
+    assert "HERMES_WORKSPACE=/workspace" in services["hermes-agent"]["environment"]
+    assert "HERMES_WEBUI_DEFAULT_WORKSPACE=/workspace" in services["hermes-webui"]["environment"]
+
+
 # ── 2: bind-mount permission escape hatches documented (#1389, #1399) ──────
 
 
