@@ -216,6 +216,7 @@ Both compose files use **named Docker volumes** by default, which solves the UID
 | `PermissionError` at startup | UID mismatch on bind mount | Set `UID=$(id -u)` in `.env` |
 | `.env: permission denied` (#1389) | `fix_credential_permissions()` enforced 0600 | Set `HERMES_SKIP_CHMOD=1` in `.env` |
 | Workspace appears empty | UID mismatch on `/workspace` mount | Set `UID=$(id -u)` in `.env` |
+| Gateway can't access workspace | Multi-container gateway missing `/workspace` mount or using host path | Recreate with current compose; inside containers use `/workspace` |
 | `git: command not found` in chat | Two-container architectural limit (#681) | Use single-container or extend Dockerfile |
 | WebUI can't find agent source | `hermes-agent-src` volume misconfigured | Use the named volumes from compose files as-is |
 | Podman shared `.hermes` fails | Podman 3.4 `keep-id` limitation | Use Podman 4+ or single-container |

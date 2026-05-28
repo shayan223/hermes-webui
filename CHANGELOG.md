@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Docker multi-container setups now mount `HERMES_WORKSPACE` at `/workspace` in the gateway container as well as the WebUI container, and set the gateway/WebUI default workspace env vars to the in-container path so gateway-originated sessions can access the same workspace selected in `.env`.
+
 ## [v0.51.71] — 2026-05-16 — Release AU (stage-364 — 3-PR batch — #2349 stale-stream cleanup non-touching + #2343 profiles vs workspaces help card + #2283 run-event journal replay [refs #1925 RFC slice 1] — with Opus-caught replay double-render fix)
 
 ### Added
