@@ -95,9 +95,10 @@ def test_two_container_agent_and_webui_share_workspace_mount():
     data = yaml.safe_load((REPO / "docker-compose.two-container.yml").read_text(encoding="utf-8"))
     services = data["services"]
 
-    expected_mount = "${HERMES_WORKSPACE:-~/workspace}:/workspace"
+    expected_mount = "${HERMES_WORKSPACE:-${HOME}/workspace}:/workspace"
     assert expected_mount in services["hermes-agent"]["volumes"]
     assert expected_mount in services["hermes-webui"]["volumes"]
+    assert services["hermes-agent"]["working_dir"] == "/workspace"
     assert "HERMES_WORKSPACE=/workspace" in services["hermes-agent"]["environment"]
     assert "HERMES_WEBUI_DEFAULT_WORKSPACE=/workspace" in services["hermes-webui"]["environment"]
 
@@ -110,9 +111,10 @@ def test_three_container_agent_and_webui_share_workspace_mount():
     data = yaml.safe_load((REPO / "docker-compose.three-container.yml").read_text(encoding="utf-8"))
     services = data["services"]
 
-    expected_mount = "${HERMES_WORKSPACE:-~/workspace}:/workspace"
+    expected_mount = "${HERMES_WORKSPACE:-${HOME}/workspace}:/workspace"
     assert expected_mount in services["hermes-agent"]["volumes"]
     assert expected_mount in services["hermes-webui"]["volumes"]
+    assert services["hermes-agent"]["working_dir"] == "/workspace"
     assert "HERMES_WORKSPACE=/workspace" in services["hermes-agent"]["environment"]
     assert "HERMES_WEBUI_DEFAULT_WORKSPACE=/workspace" in services["hermes-webui"]["environment"]
 

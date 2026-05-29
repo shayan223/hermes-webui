@@ -40,6 +40,7 @@ services:
     image: nousresearch/hermes-agent:latest
     container_name: hermes-agent
     command: gateway run
+    working_dir: /workspace
     ports:
       - "127.0.0.1:8642:8642"
     volumes:
@@ -49,7 +50,7 @@ services:
       - hermes-agent-src:/opt/hermes
       # Same workspace mount as the WebUI. Gateway sessions cannot use the
       # host-side HERMES_WORKSPACE path directly; inside the container it is /workspace.
-      - ${HERMES_WORKSPACE:-~/workspace}:/workspace
+      - ${HERMES_WORKSPACE:-${HOME}/workspace}:/workspace
     environment:
       - HERMES_HOME=/home/hermes/.hermes
       - HERMES_WORKSPACE=/workspace
@@ -121,7 +122,7 @@ services:
       - hermes-agent-src:/home/hermeswebui/.hermes/hermes-agent
       # Workspace directory — browse and edit files from the WebUI.
       # Adapt the host path to your project directory.
-      - ${HERMES_WORKSPACE:-~/workspace}:/workspace
+      - ${HERMES_WORKSPACE:-${HOME}/workspace}:/workspace
     environment:
       - HERMES_WEBUI_HOST=0.0.0.0
       - HERMES_WEBUI_PORT=8787

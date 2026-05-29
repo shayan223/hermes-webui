@@ -121,7 +121,10 @@ with `HERMES_WORKSPACE` in `.env`.
 to Docker Compose while it creates mounts. Processes inside containers must use
 the in-container path. The two- and three-container compose files mount
 `HERMES_WORKSPACE` at `/workspace` in both the gateway and WebUI containers and
-set the gateway's `HERMES_WORKSPACE=/workspace`.
+set the gateway's `HERMES_WORKSPACE=/workspace`. They also start the gateway
+process with `working_dir: /workspace`, so relative paths from Telegram, CLI,
+cron, and other gateway-originated sessions resolve inside the mounted
+workspace instead of `/home/hermes`.
 
 **Fix**: Recreate the containers after changing `.env` or the compose file:
 
@@ -192,7 +195,8 @@ The WebUI container doesn't ship with the agent's Python deps — at startup it 
 `HERMES_WORKSPACE` follows the same cross-container rule: Compose resolves the
 host path from `.env`, then mounts it at `/workspace` in containers that need
 filesystem access. Do not configure the gateway to use the host path directly;
-inside Docker, use `/workspace`.
+inside Docker, use `/workspace`. The gateway container's working directory is
+also `/workspace`, which keeps relative paths aligned for non-WebUI sessions.
 
 ## Bind-mount migration (advanced)
 
